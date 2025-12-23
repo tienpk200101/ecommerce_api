@@ -1,0 +1,40 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Register - Ecommerce{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h2>Create an Account</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div style="color: red; font-size: 0.875rem; text-align: center;">
+                Please correct the errors below.
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <p style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">{{ field.help_text|safe }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color: red; font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit">Sign Up</button>
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-color);">
+                Already have an account? <a href="{% url 'login' %}"
+                    style="color: var(--primary-color); text-decoration: none; font-weight: 500;">Login</a>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,8 @@ router.register(r"memberships", person_views.MembershipViewSet)
 
 urlpatterns = [
     path("api/", include(router.urls)),
+    path("api/auth/", include("authentication.auth.urls")),
+
     path('admin/', admin.site.urls),
     path('hello/', person_views.hello_view, name='hello'),
 ]

@@ -1,30 +1,36 @@
-import requests
-import json
+# import requests
+# import json
+import django
 import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecommerce.settings")
+django.setup()
+
+from rest_framework.test import APIClient
 
 BASE_URL = "http://localhost:8000"
-USER_URL = f"{BASE_URL}/users/"
-AUTH_URL = f"{BASE_URL}/api/auth/"
+AUTH_URL = f"{BASE_URL}/api/v1/auth/"
 
 def test_auth_flow():
     print("Testing Auth Flow...")
     
     # 1. Create a user (if not exists)
-    username = "testuser_jwt"
-    password = "testpassword123"
-    email = "testjwt@example.com"
-    
-    # Basic Auth to create user (admin/admin from fixtures or similar? Or just public registration?)
-    # Wait, the UserViewSet might verify permissions.
-    # Let's try to login first, if fail, try to create.
+    # Note: Ensure the user exists via create_test_user.py first
+    email = "tienpk+1@mumesoft.vn"
+    password = "tienpkph13248"
     
     # Try Login
-    print(f"Attempting login for {username}...")
+    print(f"Attempting login for {email}...")
     login_data = {
-        "username": username,
+        "email": email,
         "password": password
     }
-    response = requests.post(f"{AUTH_URL}login/", data=login_data)
+    client = APIClient()
+
+    response = client.post(f"{AUTH_URL}login/", data=login_data)
     
     tokens = None
     if response.status_code == 200:
@@ -47,7 +53,7 @@ def test_auth_flow():
         # 2. Verify Token
         print("Verifying token...")
         verify_data = {"token": tokens['data']['access']}
-        response = requests.post(f"{AUTH_URL}verify/", data=verify_data)
+        response = client.post(f"{AUTH_URL}token/verify/", data=verify_data)
         if response.status_code == 200:
             print("Token valid.")
         else:
@@ -56,7 +62,7 @@ def test_auth_flow():
         # 3. Refresh Token
         print("Refreshing token...")
         refresh_data = {"refresh": tokens['data']['refresh']}
-        response = requests.post(f"{AUTH_URL}refresh/", data=refresh_data)
+        response = client.post(f"{AUTH_URL}token/refresh/", data=refresh_data)
         if response.status_code == 200:
             print("Token refresh successful.")
             new_access = response.json().get('data').get('access')

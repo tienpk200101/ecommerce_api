@@ -1,41 +1,34 @@
-from django.http.response import JsonResponse
-from rest_framework import viewsets, filters
-from authentication.models import Person, Group, Membership
-from django.db.models import Value
-from django.db.models.functions import Concat
-from authentication.serializers import PersonSerializer, GroupSerializer, MembershipSerializer
-from django.shortcuts import render
-from rest_framework.permissions import AllowAny
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import RegisterSerializer, UserSerializer
+from django.contrib.auth import get_user_model
 
-# Create your views here.
-class PersonViewSet(viewsets.ModelViewSet):
-    queryset = Person.objects.all()
-    serializer_class = PersonSerializer
-    permission_classes = [AllowAny]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name', 'last_name', 'email']
+User = get_user_model()
 
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = RegisterSerializer
 
-class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        refresh = RefreshToken.for_user(user)
 
-
-class MembershipViewSet(viewsets.ModelViewSet):
-    queryset = Membership.objects.all()
-    serializer_class = MembershipSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['person__first_name', 'person__last_name', 'group__name']
-
-
-class PersonListView:
-    queryset = Person.objects.all()
+        return Response({
+            'user': serializer.data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_201_CREATED)
 
 
-def hello_view(request):
-    persons = Person.objects.all()
-    return render(request, "hello_world.html", {'persons': persons})
+class UserView(generics.RetrieveUpdateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user

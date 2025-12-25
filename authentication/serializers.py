@@ -1,34 +1,42 @@
 from rest_framework import serializers
-from authentication.models import Person, Group, Membership
+from django.contrib.auth import get_user_model
+from rest_framework.validators import UniqueValidator
+from django.contrib.auth.password_validation import validate_password
 
+User = get_user_model()
 
-# class PersonListSerializer(serializers.ModelSerializer):
-#     def to_representation(self, instance):
-#         if not instance.exists():
-#             return {
-#                 "error_message": "Not Found!"
-#             }
-
-#         return {
-#             "data": super().to_representation(instance),
-#             "message": "success",
-#             "status": 200,
-#         }
-
-class PersonSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Person
-        fields = "__all__"
-        # list_serializer_class = PersonListSerializer
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name', 'date_joined')
+        read_only_fields = ('id', 'date_joined')
 
 
-class GroupSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
+    password_confirm = serializers.CharField(write_only=True, required=True)
+
     class Meta:
-        model = Group
-        fields = "__all__"
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'password', 'password_confirm')
 
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
 
-class MembershipSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Membership
-        fields = "__all__"
+    def create(self, validated_data):
+        user = User.objects.create(
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user

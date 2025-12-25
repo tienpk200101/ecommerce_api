@@ -17,19 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from authentication.models import Person
-from authentication import views as person_views
-from rest_framework import routers
-
-router = routers.DefaultRouter()
-router.register(r"persons", person_views.PersonViewSet)
-router.register(r"memberships", person_views.MembershipViewSet)
-
-
 urlpatterns = [
-    path("api/", include(router.urls)),
-    path("api/auth/", include("authentication.auth.urls")),
-
     path('admin/', admin.site.urls),
-    path('hello/', person_views.hello_view, name='hello'),
+    path("api/v1/auth/", include("authentication.urls")),
 ]

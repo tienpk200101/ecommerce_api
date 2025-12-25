@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-from django.conf.global_settings import AUTH_USER_MODEL
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-n6*)g=x$&1&5iqsq4gn3mpzl+kv_a7o32mb=ym+99rls)##6t7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -42,9 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     # App
-    # 'accounts',
     'authentication',
-    'library'
 ]
 
 
@@ -57,6 +55,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTH_USER_MODEL = 'authentication.User'
+
+AUTHENTICATION_BACKENDS = [
+    "authentication.backends.EmailBackend",
+]
+
 
 ROOT_URLCONF = 'ecommerce.urls'
 
@@ -87,17 +92,18 @@ DATABASES = {
     #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'auth_django',
-        'USER': 'tienpk',
-        'PASSWORD': 'tienpkph13248',  # ← đang rỗng hoặc thiếu
-        'HOST': 'localhost',
-        'PORT': '3306',
-        # 'OPTIONS': {
-        #     'default-character-set': 'urf8mb4'
-        # }
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("MYSQL_DATABASE"),
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     }
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "mailhog"
+EMAIL_PORT = 1025
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
